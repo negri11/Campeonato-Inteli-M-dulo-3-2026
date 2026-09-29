@@ -1,6 +1,6 @@
 # Registro de decisões
 
-Este documento lista cada decisão de modelagem do projeto, a evidência que a sustenta e o que foi descartado no caminho. Os números vêm da validação local, e o detalhe de cada teste está em `experimentos.md`. O placar público não entrou em nenhuma decisão.
+Este documento lista cada decisão de modelagem do projeto, a evidência que a sustenta e o que foi descartado no caminho. Os números vêm da validação local, e o detalhe de cada teste está em `experimentos.md`. O placar público não entrou em nenhuma decisão de modelagem, e o único uso dele está descrito na D12.
 
 ## Como ler os números
 
@@ -101,17 +101,23 @@ Cada configuração recebe duas notas. A nota `hard` é o LogLoss contra o resul
 
 **Resultado.** O ensemble tem 3 indivíduos `ridge` e 2 `logit`, com `hard` 1.0144 e `soft` 1.0214.
 
+**Por que misturar as duas famílias em vez de ficar só com a melhor.** A busca prefere `ridge` pela nota `hard`, por 0.0010 no corte mais longo. A comparação partida a partida mostra que essa diferença muda de sinal entre temporadas (de +0.0014 em 2017 a -0.0046 em 2018) e que na nota `soft` as famílias empatam. As duas são equivalentes dentro do ruído, então a mistura é a escolha que não aposta em nenhuma.
+
 ## D9. A temperatura só é aplicada se passar de um limiar
 
 **Decisão.** A temperatura é testada de 0.80 a 1.30, e só é aplicada se melhorar a `hard` em pelo menos 0.0005. O valor aplicado foi 1.0.
 
 **Por quê.** Um ganho menor que o limiar é ruído, e aplicar um ajuste por ruído só acrescenta um parâmetro sem base. Depois da D2 a temperatura ótima ficou em 1.0, o que mostra que o modelo já sai calibrado.
 
-## D10. Duas submissões finais, com e sem regime
+## D10. Escolha das duas submissões finais
 
-**Decisão.** O caderno gera `submission.csv` (com regime) e `submission_sem_regime.csv`. As duas são candidatas às duas vagas de submissão final.
+**Decisão.** A primeira vaga é o `submission.csv`, que é a mistura de `ridge` e `logit` com regime. A segunda vaga é o `variantes/submission_logit.csv`, que é o ensemble só de `logit` com regime.
 
-**Por quê.** A D6 é uma aposta sobre o nível do mando em 2022 em diante, e a validação não consegue medir essa aposta por inteiro. As duas submissões diferem em média 0.013 por probabilidade. Se o mando voltou ao nível anterior, a primeira ganha por cerca de 0.001. Se ficou no nível intermediário, a segunda ganha por valor parecido.
+**Plano original.** A segunda vaga seria o `submission_sem_regime.csv`, como proteção contra a aposta da D6. As duas versões diferem em média 0.013 por probabilidade, e a validação local não consegue medir essa aposta por inteiro.
+
+**Por que o plano mudou.** A versão com regime fez 1.01884 no placar público e a versão sem regime fez 1.02175, com todo o resto igual. A diferença de 0.0029 aponta na mesma direção que a análise do treino. Com duas evidências independentes a favor do regime, a proteção contra ele deixou de ser o melhor uso da segunda vaga. A incerteza que sobra é entre as famílias de modelo, que a validação local não separa, e por isso a segunda vaga cobre essa dimensão.
+
+**Custo.** Se a vantagem do mandante no placar privado for menor que no público, as duas vagas perdem juntas. O placar público e o privado são amostras das mesmas temporadas, então esse risco é pequeno, mas não é zero.
 
 ## D11. O que foi testado e descartado
 
@@ -122,7 +128,12 @@ Cada configuração recebe duas notas. A nota `hard` é o LogLoss contra o resul
 - **Indicadores de time recém-promovido e de primeira rodada.** Não houve diferença mensurável.
 - **Peso de recência.** Meia-vida de 2, 4 ou 8 temporadas dá quase o mesmo resultado, e todas ganham por pouco de não usar peso. A busca escolheu 4 e 2.
 - **Alvo misto.** Pesos de 0.5 e 0.8 para o mercado perdem para o peso 1.
+- **Coeficiente de regime sem encolhimento.** Reduzir a penalização L2 sobre a coluna de regime não muda nenhuma nota nem a previsão média no teste, então o coeficiente já é estimado sem viés relevante.
 
-## D12. O placar público não entra em nenhuma decisão
+## D12. O papel do placar público
 
-O placar público usa 30% do teste e tem ruído de cerca de 0.018, que é maior que a diferença entre qualquer par de modelos deste projeto. Os scores públicos ficam registrados em `experimentos.md` só como conferência de que a submissão está no formato certo e na faixa esperada.
+**Decisão.** Nenhuma decisão de modelagem usa o placar público. Features, famílias, hiperparâmetros, ensemble e temperatura saem da validação local. O placar público entra em uma única escolha, que é qual arquivo ocupa a segunda vaga de submissão final (D10).
+
+**Por quê.** O placar público usa 30% do teste, cerca de 517 partidas. O score absoluto tem ruído de cerca de 0.018. A diferença entre duas submissões parecidas tem ruído menor, de cerca de 0.001, mas isso ainda é do tamanho das diferenças entre os modelos deste projeto. Ajustar o modelo por ele seria ajustar a ruído.
+
+**O que foi feito com as 5 submissões do dia.** Cada uma testou uma hipótese que já estava formulada antes do envio: a v1 conferiu formato e faixa de score, o par com e sem regime testou a D6, e o par `logit` e `ridge` testou a equivalência da D8. Os resultados estão em `experimentos.md`. Não houve sondagem do placar para ajustar intercepto, temperatura ou qualquer parâmetro.

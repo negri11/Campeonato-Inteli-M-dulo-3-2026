@@ -278,8 +278,60 @@ A mediana da população cai de 1.0280 para 1.0183, o que mostra que a seleção
 | Só diferença de Elo | 1.0181 | 1.0079 | 1.0225 | 1.0162 | 1.0222 |
 | Só diferença de Elo, sem time, alvo real | 1.0265 | 1.0145 | 1.0291 | 1.0233 | 1.0289 |
 
+## Exp 09. Comparação pareada entre famílias
+
+Scripts: `experimentos/exp09_familias_pareadas.py` e seção 13 do caderno.
+
+A busca prefere `ridge` pela nota `hard`. Este teste compara os ensembles dos 5 melhores `ridge` e dos 5 melhores `logit` partida a partida. O valor é a perda do `ridge` menos a perda do `logit`, então negativo favorece o `ridge`.
+
+| Corte | Diferença hard | Erro padrão | Diferença soft |
+|---|---|---|---|
+| wf | -0.0006 | 0.0006 | +0.0001 |
+| long | -0.0013 | 0.0007 | 0.0000 |
+| long2 | -0.0010 | 0.0007 | -0.0002 |
+
+| Temporada (corte long2) | Diferença hard | Erro padrão | Diferença soft |
+|---|---|---|---|
+| 2017 | +0.0014 | 0.0017 | +0.0001 |
+| 2018 | -0.0046 | 0.0014 | -0.0007 |
+| 2019 | -0.0020 | 0.0017 | -0.0004 |
+| 2020 | +0.0008 | 0.0017 | +0.0002 |
+| 2021 | -0.0007 | 0.0016 | -0.0004 |
+
+A diferença muda de sinal entre temporadas e a vantagem do `ridge` vem principalmente de 2018. Na nota `soft` as famílias empatam. Em amostras de 517 partidas, que é o tamanho do placar público, o desvio padrão da diferença `hard` entre as duas famílias fica entre 0.0009 e 0.0012.
+
+O placar público confirmou a equivalência: `logit` com regime fez 1.01838 e `ridge` com regime fez 1.01879, diferença de 0.0004, menor que um desvio padrão.
+
+## Exp 10. Encolhimento do coeficiente de regime
+
+Script: `experimentos/exp10_encolhimento_regime.py`
+
+A regularização L2 poderia encolher o coeficiente do regime e deixar parte da queda do mando no intercepto. O teste multiplica a coluna de regime por um fator `k` depois da padronização, o que reduz a penalização sobre ela.
+
+| Fator k | wf hard | wf soft | Pós-regime soft | Média de H no teste |
+|---|---|---|---|---|
+| 1 | 1.0167 | 1.0199 | 1.0216 | 0.4801 |
+| 2 | 1.0167 | 1.0199 | 1.0216 | 0.4802 |
+| 4 | 1.0167 | 1.0199 | 1.0216 | 0.4802 |
+| 8 | 1.0167 | 1.0199 | 1.0216 | 0.4803 |
+| 16 | 1.0167 | 1.0199 | 1.0216 | 0.4802 |
+
+Nada muda. O coeficiente do regime já é estimado sem encolhimento relevante, e o modelo ficou como estava.
+
 ## Submissões
 
-| Versão | Data | Arquivo | Validação hard | Placar público | Descrição |
-|---|---|---|---|---|---|
-| v1 | 2026-09-29 | `submission.csv` | 1.0158 | 1.01989 | Logística com alvo de mercado, efeito de time, ensemble das 5 melhores de uma grade de 244 configurações. Sem regime. |
+Todas as submissões foram geradas pelo caderno no commit indicado. O placar público usa 30% do teste.
+
+| Versão | Data | Arquivo | Commit | Validação hard | Validação soft | Placar público |
+|---|---|---|---|---|---|---|
+| v1, logística, sem regime | 2026-09-29 | `submission.csv` | 8cc97fa | 1.0158 | 1.0217 | 1.01989 |
+| v2, mistura `ridge` e `logit`, com regime | 2026-09-29 | `submission.csv` | 3f71938 | 1.0144 | 1.0214 | 1.01884 |
+| v2, mistura `ridge` e `logit`, sem regime | 2026-09-29 | `submission_sem_regime.csv` | 3f71938 | 1.0149 | 1.0215 | 1.02175 |
+| v2, só `logit`, com regime | 2026-09-29 | `variantes/submission_logit.csv` | 66b52f1 | 1.0151 | 1.0215 | 1.01838 |
+| v2, só `ridge`, com regime | 2026-09-29 | `variantes/submission_ridge.csv` | 66b52f1 | 1.0141 | 1.0215 | 1.01879 |
+
+### Leitura do placar público
+
+As quatro submissões com e sem regime contam a mesma história que a análise do treino. A única diferença entre a segunda e a terceira linha é a feature de regime, e ela vale 0.0029 no placar público. As três submissões com regime ficam dentro de 0.0005 uma da outra, o que é ruído.
+
+A v1 sem regime (1.01989) foi melhor que a v2 sem regime (1.02175). A explicação mais plausível não é a família do modelo, e sim o peso de recência: a v2 usa meia-vida de 2 e 4 temporadas, que dá mais peso a 2020 e 2021, e sem a feature de regime isso puxa a vantagem do mandante para baixo. A previsão média de vitória do mandante no teste é 0.4645 na v1 e 0.4616 na v2 sem regime.
