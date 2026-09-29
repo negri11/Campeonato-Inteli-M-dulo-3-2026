@@ -1,0 +1,14 @@
+# dados da competicao (baixar do Kaggle, nao redistribuir)
+data/
+
+# credenciais
+.kaggle/
+*.token
+.env
+
+# python e jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
