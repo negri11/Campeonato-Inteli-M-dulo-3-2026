@@ -12,3 +12,6 @@ __pycache__/
 .ipynb_checkpoints/
 .venv/
 venv/
+
+# saida dos scripts exploratorios
+experimentos/evo_log.csv

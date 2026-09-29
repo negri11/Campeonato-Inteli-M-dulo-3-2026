@@ -1,3 +1,4 @@
+# versoes usadas no desenvolvimento: numpy 2.5.2, pandas 3.0.5, scikit-learn 1.9.0 (Python 3.12)
 numpy
 pandas
 scikit-learn>=1.2
